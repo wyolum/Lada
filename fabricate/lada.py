@@ -36,7 +36,7 @@ def new_canvas(name, width, height, margin):
     return can
 
 OFFSET = .4 * inch
-M3_RAD = 1.6 * mm
+M3_RAD = 1.7 * mm
 
 class Sida:
     def __init__(self, x, y, holes):
@@ -54,7 +54,7 @@ class Sida:
         
 
 class Lada:
-    def __init__(self, length, width, height, material_thickness, max_edge_span=12*inch, margin=.5*inch):
+    def __init__(self, length, width, height, material_thickness, max_edge_span=10*inch, margin=0):
         total_h = 3 * margin + height + width
         total_w = 3 * margin + length  + width
         
@@ -65,21 +65,22 @@ class Lada:
         self.material_thickness = material_thickness
         self.max_edge_span = max_edge_span
         
+        n_edge_l = int((self.length - 2 * self.material_thickness  - 2 * OFFSET) / max_edge_span)
+        n_edge_w = int((self.width - 2 * self.material_thickness  - 2 * OFFSET) / max_edge_span)
+        n_edge_h = int((self.height - 2 * self.material_thickness  - 2 * OFFSET) / max_edge_span)
+
         front_holes = [
             (self.material_thickness + OFFSET, OFFSET, M3_RAD),
             (self.length - self.material_thickness - OFFSET, OFFSET, M3_RAD),
             (self.length - self.material_thickness - OFFSET, self.height - OFFSET - 2 * self.material_thickness, M3_RAD),
             (self.material_thickness + OFFSET, self.height - OFFSET - 2 * self.material_thickness, M3_RAD)
             ]
-        self.front = Sida(self.length, self.height - 2 * self.material_thickness, front_holes)
-        
         top_holes = [
             (self.material_thickness + OFFSET, self.material_thickness + OFFSET, M3_RAD),
             (self.length - (self.material_thickness + OFFSET), self.material_thickness + OFFSET, M3_RAD),
             (self.length - (self.material_thickness + OFFSET), self.width - (self.material_thickness + OFFSET), M3_RAD),
             (self.material_thickness + OFFSET, self.width - (self.material_thickness + OFFSET), M3_RAD)
             ]
-        self.top = Sida(self.length, self.width, top_holes)
         side_holes = [
             (OFFSET, OFFSET, M3_RAD),
             (self.height - OFFSET - 2 * self.material_thickness, OFFSET, M3_RAD),
@@ -87,19 +88,57 @@ class Lada:
             (OFFSET, self.width - 2 * self.material_thickness - OFFSET, M3_RAD)
             ]
 
+        
+        xstart = self.material_thickness + OFFSET
+        dx = (self.length - 2 * xstart) / (n_edge_l + 1)
+        for i in range(n_edge_l):
+            front_holes.append((xstart + (i + 1) * dx, OFFSET, M3_RAD))
+            front_holes.append((xstart + (i + 1) * dx, self.height - OFFSET - 2 * self.material_thickness, M3_RAD))
+
+            top_holes.append((xstart + (i + 1) * dx, self.material_thickness + OFFSET, M3_RAD))
+            top_holes.append((xstart + (i + 1) * dx, self.width - self.material_thickness - OFFSET, M3_RAD))
+
+            
+        for i in range(n_edge_h):
+            ystart = OFFSET
+            dy = (self.height - 2 * (ystart + self.material_thickness)) / (n_edge_h + 1)
+            front_holes.append((self.material_thickness + OFFSET, ystart + (i + 1) * dy, M3_RAD))
+            front_holes.append((self.length - self.material_thickness - OFFSET, ystart + (i + 1) * dy, M3_RAD))
+            
+            side_holes.append((ystart + (i + 1) * dy, OFFSET, M3_RAD))
+            side_holes.append((ystart + (i + 1) * dy, self.width - OFFSET - 2 * self.material_thickness, M3_RAD))
+        
+        for i in range(n_edge_w):
+            ystart = OFFSET + self.material_thickness
+            dy = (self.width - 2 * OFFSET - 2 * self.material_thickness) / (n_edge_w + 1)
+            top_holes.append((self.material_thickness + OFFSET, ystart + (i + 1) * dy, M3_RAD))
+            top_holes.append((self.length - 2 * OFFSET - self.material_thickness + OFFSET, ystart + (i + 1) * dy, M3_RAD))
+
+            ystart = OFFSET
+            side_holes.append((OFFSET, ystart + (i + 1) * dy, M3_RAD))
+            side_holes.append((self.height - OFFSET - 2 * self.material_thickness, ystart + (i + 1) * dy, M3_RAD))
+            
+
+        self.top = Sida(self.length, self.width, top_holes)
+        self.front = Sida(self.length, self.height - 2 * self.material_thickness, front_holes)
         self.side = Sida(self.height - 2 * self.material_thickness, self.width - 2 * self.material_thickness, side_holes)
 
     def drawOn(self, can):
         lower_left = []
         self.front.drawOn((self.margin, self.margin), can)
-        self.top.drawOn((self.margin, self.margin + self.height), can)
-        self.side.drawOn((2 * self.margin + self.length, self.margin + self.height + self.material_thickness), can)
+        self.top.drawOn((self.margin, self.height - self.material_thickness), can)
+        if False: ## one page
+            self.side.drawOn((2 * self.margin + self.length, self.margin + self.height + self.material_thickness), can)
+            can.showPage()
+        else:
+            can.showPage()
+            self.side.drawOn((self.margin, self.margin), can)
+            can.showPage()
 
 
-can = new_canvas("lada.pdf", 20*inch, 12*inch, .5*inch)
-lada = Lada(4 * inch, 4 * inch, 4 * inch, 3 * mm)
-lada.drawOn(can)
-can.showPage()
-can.save()
-print 'wrote', can._filename
-        
+def test():
+    can = new_canvas("lada_test.pdf", 20*inch, 12*inch, .5*inch)
+    lada = Lada(20 * inch, 4 * inch, 8 * inch, 3 * mm, max_edge_span=10*inch)
+    lada.drawOn(can)
+    can.save()
+    print 'wrote', can._filename
