@@ -1,4 +1,5 @@
  # -*- coding: latin-1 -*-
+import StringIO
 import string
 from string import *
 import os.path
@@ -51,7 +52,19 @@ class Sida:
             can.circle(*hole)
             
         can.translate(-lower_left[0], -lower_left[1])
-        
+    
+    def toScad(self, material_thickness):
+        hole_scad = []
+        for hole in self.holes:
+            hole_scad.append('translate([%s * mm, %s * mm, -1])cylinder(h=%s*mm, r=%s*mm);' % (hole[0] / mm, hole[1] / mm, material_thickness / mm + 2, hole[2] / mm))
+        hole_scad = '\n    '.join(hole_scad)
+        out = """\
+difference(){
+    color([1, 1, 1, .4])cube([%s*mm, %s*mm, %s*mm]);
+    %s
+}
+""" % (self.x / mm, self.y / mm, material_thickness / mm, hole_scad)
+        return out
 
 class Lada:
     def __init__(self, length, width, height, material_thickness, max_edge_span=10*inch, margin=0):
@@ -126,15 +139,46 @@ class Lada:
     def drawOn(self, can):
         lower_left = []
         self.front.drawOn((self.margin, self.margin), can)
-        self.top.drawOn((self.margin, self.height - self.material_thickness), can)
-        if False: ## one page
-            self.side.drawOn((2 * self.margin + self.length, self.margin + self.height + self.material_thickness), can)
+        self.top.drawOn((self.margin, self.height - self.material_thickness + 2 * self.margin), can)
+        if True: ## one page
+            self.side.drawOn((2 * self.margin + self.length, 2 * self.margin + self.height), can)
             can.showPage()
         else:
             can.showPage()
             self.side.drawOn((self.margin, self.margin), can)
             can.showPage()
 
+    def toScad(self):
+        out = StringIO.StringIO()
+        print >> out, 'mm = 1;'
+
+        print >> out, self.top.toScad(self.material_thickness)
+        print >> out, 'translate([0, 0, %s*mm])' % ((self.height - self.material_thickness) / mm)
+        print >> out, self.top.toScad(self.material_thickness)
+        
+        print >> out, '''module front_back(){
+%s
+}''' % self.front.toScad(self.material_thickness)
+
+        print >> out, "translate([0, %s*mm, %s*mm])" % (self.material_thickness / mm, self.material_thickness / mm)
+        print >> out, "rotate(v=[1, 0, 0], a=90)"
+        print >> out, 'front_back();'
+        print >> out, 'translate([0, %s*mm, %s*mm])' % (self.width / mm, self.material_thickness / mm)
+        print >> out, "rotate(v=[1, 0, 0], a=90)"
+        print >> out, 'front_back();'
+        
+        print >> out, '''module side(){
+%s
+}''' % self.side.toScad(self.material_thickness)
+        print >> out, 'translate([%s*mm, %s*mm, %s*mm])' % (self.material_thickness / mm, self.material_thickness / mm, self.material_thickness / mm)
+        print >> out, 'rotate(v=[0, 1, 0], a=-90)'
+        print >> out, 'side();'
+        print >> out, 'translate([%s*mm, %s*mm, %s*mm])' % ((self.length) / mm, self.material_thickness / mm, self.material_thickness / mm)
+        print >> out, 'rotate(v=[0, 1, 0], a=-90)'
+        print >> out, 'side();'
+        
+        out.seek(0)
+        return out.read()
 
 def test():
     can = new_canvas("lada_test.pdf", 20*inch, 12*inch, .5*inch)
@@ -142,3 +186,13 @@ def test():
     lada.drawOn(can)
     can.save()
     print 'wrote', can._filename
+
+    scad = lada.toScad()
+    f = open("lada3D_test.scad", 'w')
+    print >> f, scad
+    f.close()
+    print 'write', f.name
+    
+
+if __name__ == '__main__':
+    test()
