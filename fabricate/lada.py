@@ -138,16 +138,19 @@ class Lada:
 
     def drawOn(self, can):
         lower_left = []
+        def dim(val):
+            return '%.2f [%.3f]' % (val / mm, val / inch)
+        can.drawString(self.margin, self.height + self.length, "Lada, L=%s, W=%s, H=%s, T=%s" % tuple(map(dim, (self.length, self.width, self.height, self.material_thickness))))
         self.front.drawOn((self.margin, self.margin), can)
         self.top.drawOn((self.margin, self.height - self.material_thickness + 2 * self.margin), can)
         if True: ## one page
-            self.side.drawOn((2 * self.margin + self.length, 2 * self.margin + self.height), can)
+            self.side.drawOn((2 * self.margin + self.length + self.material_thickness, 2 * self.margin + self.height), can)
             can.showPage()
         else:
             can.showPage()
             self.side.drawOn((self.margin, self.margin), can)
             can.showPage()
-
+            
     def toScad(self):
         out = StringIO.StringIO()
         print >> out, 'mm = 1;'
@@ -181,8 +184,12 @@ class Lada:
         return out.read()
 
 def test():
+    T = 3* mm
+    LENGTH = 87 * mm + 2 * T
+    WIDTH = 79 * mm + 2 * T
+    HEIGHT = 50 * mm + 2 * T
     can = new_canvas("lada_test.pdf", 20*inch, 12*inch, .5*inch)
-    lada = Lada(20 * inch, 4 * inch, 8 * inch, 3 * mm, max_edge_span=10*inch)
+    lada = Lada(LENGTH, WIDTH, HEIGHT, 3 * mm, max_edge_span=60*mm)
     lada.drawOn(can)
     can.save()
     print 'wrote', can._filename

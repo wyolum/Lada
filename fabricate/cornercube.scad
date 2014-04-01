@@ -119,11 +119,12 @@ module corner(length, thickness, offset){
     }
   }
 }
-module inside_corner(length, thickness, offset){
+module inside_corner(length, thickness, offset, standoff_h=10*mm){
   LENGTH = length;
   THICKNESS = thickness;
   OFFSET = offset;
 
+  // translate([THICKNESS, THICKNESS, THICKNESS])cube(standoff_h*mm);
   difference(){
     corner(LENGTH, THICKNESS, OFFSET);
     translate([OFFSET, OFFSET, THICKNESS - HEX_THICKNESS])scale([1, 1, 100])hex();
@@ -135,7 +136,7 @@ module inside_corner(length, thickness, offset){
       rotate(v=[1, 0, 0], a=30) // correct one!
       rotate(v=[0, 1, 0], a=90) // correct one!
       scale([1, 1, 100]) hex();
-    translate([THICKNESS * 3/4, THICKNESS * 3/4, THICKNESS])pcb();
+    translate([THICKNESS * 2/4, THICKNESS * 2/4, THICKNESS + standoff_h])pcb();
   }
 }
 module outside_corner(length, thickness, offset, material_thickness){
