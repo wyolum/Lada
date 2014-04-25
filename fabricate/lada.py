@@ -21,12 +21,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 import glob
 import os.path
 import sys
-try:
-    sys.path.append('/home/justin/Dropbox/WyoLumCode/CNC/')
-    from CNC.cnc import *
-    from CNC.baffles import *
-except:
-    pass
 
 from numpy import arange
 from copy import deepcopy
