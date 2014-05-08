@@ -42,7 +42,10 @@ module tab(x, y){
   translate([x, y])cylinder(r=TAB_R, h=TAB_HEIGHT);
 }
 
-module edge(){
+module edge(length, thickness, offset){
+  LENGTH = length;
+  THICKNESS = thickness;
+  OFFSET = offset;
   difference(){
     union(){
       difference(){
@@ -68,15 +71,15 @@ module inside_edge(length, thickness, offset){
   THICKNESS = thickness;
   OFFSET = offset;
   difference(){
-    edge();
+    edge(length, thickness, offset);
     //translate([.2 * inch - 1*mm, EDGE_WIDTH/2 + PCB_H/2, .2 * inch - 1*mm])rotate(v=[-1, 0, 0], a=-90)translate([THICKNESS * 3/4, -1, THICKNESS])pcb();
     translate([OFFSET, EDGE_WIDTH/2, THICKNESS - HEX_THICKNESS])scale([1, 1, 1.01])hex();
     translate([THICKNESS - HEX_THICKNESS, EDGE_WIDTH/2, OFFSET])rotate(v=[0, 1, 0], a=90)scale([1, 1, 1.01])hex();
   }
 }
-module outside_edge(){
+module outside_edge(length, thickness, offset){
   difference(){
-    edge();
+    edge(length, thickness, offset);
     translate([OFFSET, EDGE_WIDTH/2, 0])scale([1, 1, 1.01])cylinder(r=HEX_R * 1.1, h=HEX_THICKNESS);
     translate([0, EDGE_WIDTH/2, OFFSET])scale([1, 1, 1.01])rotate(v=[0, 1, 0], a=90)cylinder(r=HEX_R * 1.1, h=HEX_THICKNESS);
   }
@@ -165,8 +168,34 @@ module outside_corner(length, thickness, offset, material_thickness){
       cylinder(r=HEX_R * 1.1);
   }
 }
+/* used for a specialized screen holder for photo booth */
+module screen_clip(span, screen_h, overhang){
+  difference(){
+    union(){
+      edge(LENGTH, THICKNESS, OFFSET);
+      translate([OFFSET, 0, 0])cube([span, EDGE_WIDTH, THICKNESS]);
+      translate([OFFSET + span - THICKNESS, 0, 0])cube([THICKNESS, EDGE_WIDTH, screen_h + THICKNESS]);
+      translate([OFFSET + span - THICKNESS, 0, screen_h])cube([overhang + THICKNESS, EDGE_WIDTH, THICKNESS]);
+    }
+    union(){
+      translate([OFFSET, EDGE_WIDTH/2, THICKNESS - HEX_THICKNESS])scale([1, 1, 1.01])hex();
+      translate([THICKNESS - HEX_THICKNESS, EDGE_WIDTH/2, OFFSET])rotate(v=[0, 1, 0], a=90)scale([1, 1, 1.01])hex();
+      translate([OFFSET, EDGE_WIDTH/2, 0])cylinder(r=SCREW_R, h=THICKNESS * 1.1);
+    }
+  }
+}
+left_span = 17 * mm; // distance from center of left mount hole to edge of display
+right_span = 17 * mm; // "                      right "
+bottom_span = 18 * mm; // "                     bottom "
+top_span = 18 * mm;    // "                      top     "
+screen_thickness = 5*mm;
+overhang = 5*mm;
+screen_clip(left_span, 5*mm, 5*mm);
+translate([0, 20*mm, 0])screen_clip(right_span, 5*mm, 5*mm);
+translate([0, 40*mm, 0])screen_clip(top_span, 5*mm, 5*mm);
+translate([0, 60*mm, 0])screen_clip(bottom_span, 5*mm, 5*mm);
 
-translate([0, MATERIAL_THICKNESS + THICKNESS, MATERIAL_THICKNESS + THICKNESS])inside_corner(LENGTH, THICKNESS, OFFSET);
+// translate([0, MATERIAL_THICKNESS + THICKNESS, MATERIAL_THICKNESS + THICKNESS])inside_corner(LENGTH, THICKNESS, OFFSET); // corner
 // translate([-MATERIAL_THICKNESS - THICKNESS, 0, 0])
 // outside_corner(LENGTH, THICKNESS, OFFSET, MATERIAL_THICKNESS);
 
