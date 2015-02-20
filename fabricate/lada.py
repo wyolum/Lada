@@ -62,6 +62,9 @@ difference(){
 
 class Lada:
     def __init__(self, length, width, height, material_thickness, max_edge_span=10*inch, margin=0):
+        '''
+        length, width, and height are for outside of box.  Subtract material_thickness to compute inside dims
+        '''
         total_h = 3 * margin + height + width
         total_w = 3 * margin + length  + width
         
@@ -145,34 +148,47 @@ class Lada:
             self.side.drawOn((self.margin, self.margin), can)
             can.showPage()
             
-    def toScad(self):
+    def toScad(self, name=''):
         out = StringIO.StringIO()
         print >> out, 'mm = 1;'
-
-        print >> out, self.top.toScad(self.material_thickness)
-        print >> out, 'translate([0, 0, %s*mm])' % ((self.height - self.material_thickness) / mm)
-        print >> out, self.top.toScad(self.material_thickness)
-        
-        print >> out, '''module front_back(){
+        print >> out, '''module %stop(){
 %s
-}''' % self.front.toScad(self.material_thickness)
-
-        print >> out, "translate([0, %s*mm, %s*mm])" % (self.material_thickness / mm, self.material_thickness / mm)
-        print >> out, "rotate(v=[1, 0, 0], a=90)"
-        print >> out, 'front_back();'
-        print >> out, 'translate([0, %s*mm, %s*mm])' % (self.width / mm, self.material_thickness / mm)
-        print >> out, "rotate(v=[1, 0, 0], a=90)"
-        print >> out, 'front_back();'
+}''' % (name, self.top.toScad(self.material_thickness))
+        print >> out, '''module %sbottom(){
+    translate([0, 0, %s*mm])%stop();
+}
+''' % (name, ((self.height - self.material_thickness) / mm), name)
         
-        print >> out, '''module side(){
+        print >> out, '''module %sfront(){
+translate([0, %s*mm, %s*mm])
+rotate(v=[1, 0, 0], a=90)
 %s
-}''' % self.side.toScad(self.material_thickness)
-        print >> out, 'translate([%s*mm, %s*mm, %s*mm])' % (self.material_thickness / mm, self.material_thickness / mm, self.material_thickness / mm)
-        print >> out, 'rotate(v=[0, 1, 0], a=-90)'
-        print >> out, 'side();'
-        print >> out, 'translate([%s*mm, %s*mm, %s*mm])' % ((self.length) / mm, self.material_thickness / mm, self.material_thickness / mm)
-        print >> out, 'rotate(v=[0, 1, 0], a=-90)'
-        print >> out, 'side();'
+}''' % (name, self.material_thickness / mm, self.material_thickness / mm, self.front.toScad(self.material_thickness))
+
+        print >> out, '''module %sback(){
+    translate([0, %s*mm, 0])%sfront();
+}
+''' % (name, (self.width - self.material_thickness) / mm, name)
+        
+        
+        print >> out, '''module %sright(){
+    translate([%s*mm, %s*mm, %s*mm])
+    rotate(v=[0, 1, 0], a=-90)
+    %s
+}''' % (name, self.material_thickness / mm, self.material_thickness / mm, self.material_thickness / mm, self.side.toScad(self.material_thickness))
+        print >> out, '''module %sleft(){
+translate([%s*mm, 0, 0])
+%sright();
+}''' % (name, (self.length - self.material_thickness) / mm, name)
+        print >> out, 'module %smain(){' % name
+        print >> out, '    %stop();' % name
+        print >> out, '    %sbottom();' % name
+        print >> out, '    %sfront();' % name
+        print >> out, '    %sback();' % name
+        print >> out, '    %sright();' % name
+        print >> out, '    %sleft();' % name
+        print >> out, '}'
+        print >> out, '%smain();' % name
         
         out.seek(0)
         return out.read()

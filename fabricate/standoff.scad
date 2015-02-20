@@ -34,5 +34,5 @@ module boardmount(HoleD,BoardThick,lift)
 
 
 // Sample part for test fitting
-//translate([-7.5,-7.5,0])cube([15,15,1]);
-//translate([0,0,1])boardmount(HoleD = 2.7, BoardThick = 1.70, lift=5);
+translate([-7.5,-7.5,0])cube([15,15,1]);
+translate([0,0,1])boardmount(HoleD = 2.7, BoardThick = 1.70, lift=5);

@@ -122,6 +122,7 @@ module corner(length, thickness, offset){
     }
   }
 }
+
 module inside_corner(length, thickness, offset, standoff_h=10*mm){
   LENGTH = length;
   THICKNESS = thickness;
@@ -185,6 +186,39 @@ module screen_clip(span, screen_h, overhang){
   }
 }
 
+module double_corner(span){
+  // for use when two individual corners will not fit.  Span is inside distance between opposite faces.
+  intersection(){
+    difference(){
+      cube([LENGTH, LENGTH, span]);
+      translate([THICKNESS, THICKNESS, THICKNESS])cube([LENGTH, LENGTH, span - 2 * THICKNESS]);
+      translate([OFFSET, OFFSET, 0])
+	translate([0, 0, -1])
+	cylinder(r=SCREW_R, h=2 * THICKNESS + span);
+      translate([OFFSET, 0, span/2])
+	rotate(v=[-1, 0, 0], a=90) 
+	translate([0, 0, -1])
+	cylinder(r=SCREW_R, h=2 * THICKNESS);
+      translate([0, OFFSET, span/2])
+	rotate(v=[0, 1, 0], a=90)
+	translate([0, 0, -1])
+	cylinder(r=SCREW_R, h=2 * THICKNESS);
+      translate([OFFSET, OFFSET, THICKNESS - HEX_THICKNESS])hex();
+      translate([OFFSET, OFFSET, span - HEX_THICKNESS - THICKNESS])hex();
+    translate([OFFSET, THICKNESS - HEX_THICKNESS,  span/2])
+      rotate(v=[-1, 0, 0], a=90)
+      scale([1, 1, 100])
+      hex();
+    translate([THICKNESS - HEX_THICKNESS, OFFSET,  span/2])
+      rotate(v=[1, 0, 0], a=30) // correct one!
+      rotate(v=[0, 1, 0], a=90) // correct one!
+      scale([1, 1, 100]) hex();
+
+    }
+    cylinder(r=LENGTH, h=40 * mm);
+  }
+}
+// double_corner(35*mm);
 // translate([0, MATERIAL_THICKNESS + THICKNESS, MATERIAL_THICKNESS + THICKNESS])inside_corner(LENGTH, THICKNESS, OFFSET); // corner
 // translate([-MATERIAL_THICKNESS - THICKNESS, 0, 0])
 // outside_corner(LENGTH, THICKNESS, OFFSET, MATERIAL_THICKNESS);
