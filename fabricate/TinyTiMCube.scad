@@ -6,7 +6,15 @@ difference(){
     inside_corner(1*inch, 3.3*mm, 0.6*inch, standoff_h=200);
     cube(.75*inch);
   }
-  translate([-5*inch, -5*inch, 0])cube([10*inch, 10*inch, .5*inch]);
+  translate([-5*inch, -5*inch, 0])cube([10*inch, 10*inch, .485*inch]);
+}
+
+difference(){
+  intersection(){
+    rotate(a=acos(([1, 1, 1] * [0, 0, 1]) / sqrt(3)), v=cross([1, 1, 1] / sqrt(3), [0, 0, 1]))    cube(.75*inch);
+    translate([-5*inch, -5*inch, .485*inch])cube([10*inch, 10*inch, .3*mm]);
+  }
+  cylinder(d=6*mm, h=100*mm);
 }
 
 
