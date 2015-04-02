@@ -37,8 +37,11 @@ class Sida:
     def __init__(self, x, y, holes):
         self.x = x
         self.y = y
-        self.holes = holes ### [(x, y, r), ...]
-        
+        self.holes = holes ### [(x, y, r), ...](
+     
+    def drill(self, x, y, r):
+        self.holes.append([x, y, r])
+
     def drawOn(self, lower_left, can):
         can.translate(lower_left[0], lower_left[1])
         can.rect(0, 0, self.x, self.y)
@@ -150,6 +153,7 @@ class Lada:
             
     def toScad(self, name=''):
         out = StringIO.StringIO()
+        print >> out, '$fn = 25;'
         print >> out, 'mm = 1;'
         print >> out, '''module %stop(){
 %s

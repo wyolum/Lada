@@ -8,7 +8,7 @@ STANDOFF_H = 8 * mm
 lada.OFFSET = 0.6*inch + PCB_THICKNESS + STANDOFF_H
 ### end cheat!!
 
-T = 1.51 * mm
+T = 3.3 * mm
 LENGTH = 5 * inch + 2 * STANDOFF_H + 0 * T
 WIDTH = 5 * inch + 2 * STANDOFF_H + 0 * T
 HEIGHT = 5 * inch + 2 * STANDOFF_H + 0 * T
