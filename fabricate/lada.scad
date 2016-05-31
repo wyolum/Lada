@@ -224,6 +224,6 @@ module double_corner(span){
 // outside_corner(LENGTH, THICKNESS, OFFSET, MATERIAL_THICKNESS);
 
 // translate([0, -1*inch, 0])inside_corner(LENGTH, THICKNESS, OFFSET);
-// translate([0, 1*inch + 13, 0])rotate(v=[0, 0, 1], a=-90)inside_corner(LENGTH, THICKNESS, OFFSET);
-// inside_edge(LENGTH, THICKNESS, OFFSET);
+translate([0, 1*inch + 13, 0])rotate(v=[0, 0, 1], a=-90)inside_corner(LENGTH, THICKNESS, OFFSET);
+inside_edge(LENGTH, THICKNESS, OFFSET);
 
